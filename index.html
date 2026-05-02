@@ -2,12 +2,8 @@
 <html lang="en" data-theme="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>CineVault • Watchlist Tracker</title>
-
-    <!-- ========== FAVICON ========== -->
-    <!-- Place a 32x32 PNG file named "favicon.png" in the same folder, then update the path below -->
-    <link rel="icon" type="image/png" href="favicon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CineVault - Watchlist Tracker</title>
 
     <!-- Google Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,6 +15,7 @@
 
     <style>
         :root {
+            /* Light Theme */
             --bg-primary: #f5f2f0;
             --bg-secondary: #ffffff;
             --bg-tertiary: #f0ece9;
@@ -78,11 +75,22 @@
             --card-hover-bg: #252540;
             --input-bg: #1a1a2e;
             --input-border: #333350;
+            --tag-watching: #ff6b6b;
+            --tag-planning: #ffa94d;
+            --tag-watched: #51cf66;
+            --gradient-1: linear-gradient(135deg, #8b7cf7, #b4a7ff);
+            --gradient-2: linear-gradient(135deg, #ff6b6b, #ffa94d);
+            --gradient-3: linear-gradient(135deg, #51cf66, #69db7c);
             --nav-bg: rgba(15, 15, 26, 0.85);
             --modal-overlay: rgba(0, 0, 0, 0.7);
             --toast-bg: #e8e8f0;
             --toast-text: #1a1a2e;
             --star-empty: #3a3a55;
+            --star-filled: #ffc107;
+            --ripple: rgba(139, 124, 247, 0.4);
+            --particle-color: rgba(139, 124, 247, 0.12);
+            --scrollbar-thumb: #3a3a55;
+            --scrollbar-track: transparent;
         }
 
         * {
@@ -101,10 +109,11 @@
             background: var(--bg-primary);
             color: var(--text-primary);
             min-height: 100vh;
-            transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s;
+            transition: background 0.5s cubic-bezier(0.4, 0, 0.2, 1), color 0.5s cubic-bezier(0.4, 0, 0.2, 1);
             overflow-x: hidden;
             line-height: 1.6;
             -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
         }
 
         /* Custom Scrollbar */
@@ -118,49 +127,11 @@
             background: var(--scrollbar-thumb);
             border-radius: 10px;
         }
-
-        /* --------- LOADING SCREEN ---------- */
-        #loadingScreen {
-            position: fixed;
-            inset: 0;
-            background: var(--bg-primary);
-            z-index: 9999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            transition: opacity 0.6s ease, visibility 0.6s;
-        }
-        .loader-logo {
-            font-size: 4rem;
-            animation: loaderPulse 1.5s infinite ease-in-out;
-            margin-bottom: 1.5rem;
-        }
-        @keyframes loaderPulse {
-            0%, 100% { transform: scale(1); opacity: 0.7; }
-            50% { transform: scale(1.15); opacity: 1; }
-        }
-        .loader-bar {
-            width: 200px;
-            height: 6px;
-            background: var(--border);
-            border-radius: 10px;
-            overflow: hidden;
-            margin-top: 1rem;
-        }
-        .loader-bar-fill {
-            height: 100%;
-            width: 0%;
-            background: var(--gradient-1);
-            border-radius: 10px;
-            animation: loaderFill 1.8s ease-in-out forwards;
-        }
-        @keyframes loaderFill {
-            0% { width: 0%; }
-            100% { width: 100%; }
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--accent-light);
         }
 
-        /* --------- PARTICLES & GRID ---------- */
+        /* Particle Background */
         .particles-container {
             position: fixed;
             top: 0;
@@ -179,726 +150,2218 @@
             opacity: 0;
         }
         @keyframes floatUp {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            10% { opacity: 0.8; }
-            90% { opacity: 0.2; }
-            100% { transform: translateY(-10vh) scale(1.5); opacity: 0; }
+            0% {
+                transform: translateY(100vh) scale(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 0.8;
+            }
+            90% {
+                opacity: 0.2;
+            }
+            100% {
+                transform: translateY(-10vh) scale(1.5);
+                opacity: 0;
+            }
         }
+
+        /* Animated Grid Background */
         .grid-bg {
-            position: fixed; inset: 0; pointer-events: none; z-index: 0; opacity: 0.03;
-            background-image: linear-gradient(var(--accent) 1px, transparent 1px), linear-gradient(90deg, var(--accent) 1px, transparent 1px);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            opacity: 0.03;
+            background-image:
+                linear-gradient(var(--accent) 1px, transparent 1px),
+                linear-gradient(90deg, var(--accent) 1px, transparent 1px);
             background-size: 60px 60px;
             animation: gridShift 20s linear infinite;
         }
         @keyframes gridShift {
-            0% { background-position: 0 0; }
-            100% { background-position: 60px 60px; }
+            0% {
+                background-position: 0 0;
+            }
+            100% {
+                background-position: 60px 60px;
+            }
         }
 
-        /* --------- APP CONTAINER ---------- */
+        /* Main App Container */
         .app-container {
             position: relative;
             z-index: 1;
             max-width: 1300px;
             margin: 0 auto;
-            padding: 0 20px;
+            padding: 0 24px;
         }
 
-        /* --------- NAVBAR ---------- */
+        /* Navigation */
         .navbar {
             position: sticky;
-            top: 16px;
+            top: 20px;
             z-index: 100;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 14px 24px;
-            margin-top: 16px;
+            padding: 16px 28px;
+            margin-top: 20px;
             background: var(--nav-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--border);
             border-radius: 20px;
             box-shadow: var(--shadow-md);
-            transition: all 0.4s;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
             animation: slideDownNav 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
         @keyframes slideDownNav {
-            from { opacity: 0; transform: translateY(-40px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(-40px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .navbar.scrolled {
+            padding: 12px 24px;
+            box-shadow: var(--shadow-lg);
+            border-radius: 16px;
         }
         .nav-brand {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             font-family: 'Space Grotesk', sans-serif;
             font-weight: 700;
-            font-size: 1.4rem;
+            font-size: 1.5rem;
+            letter-spacing: -0.5px;
             cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+        .nav-brand:hover {
+            transform: scale(1.03);
         }
         .nav-brand .logo-icon {
-            width: 42px; height: 42px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 44px;
+            height: 44px;
             border-radius: 14px;
             background: var(--gradient-1);
             color: #fff;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 1.2rem;
-            animation: logoPulse 3s infinite;
+            font-size: 1.3rem;
+            animation: logoPulse 3s ease-in-out infinite;
+            box-shadow: 0 4px 20px var(--accent-glow);
         }
         @keyframes logoPulse {
-            0%,100% { box-shadow: 0 4px 20px var(--accent-glow); }
-            50% { box-shadow: 0 8px 35px var(--accent-glow); }
+            0%,
+            100% {
+                box-shadow: 0 4px 20px var(--accent-glow);
+            }
+            50% {
+                box-shadow: 0 8px 35px var(--accent-glow), 0 0 60px var(--accent-glow);
+            }
         }
         .nav-actions {
-            display: flex; align-items: center; gap: 8px;
-            flex-wrap: wrap;
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
 
-        /* --------- BUTTONS ---------- */
+        /* Buttons */
         .btn {
-            display: inline-flex; align-items: center; gap: 6px;
-            padding: 10px 18px; border: none; border-radius: 14px;
-            font-weight: 600; font-size: 0.9rem; cursor: pointer;
-            transition: all 0.3s; position: relative; overflow: hidden;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
             white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+        .btn:active {
+            transform: scale(0.95);
         }
         .btn-primary {
-            background: var(--gradient-1); color: #fff;
+            background: var(--gradient-1);
+            color: #fff;
             box-shadow: 0 4px 16px var(--accent-glow);
         }
+        .btn-primary:hover {
+            box-shadow: 0 8px 28px var(--accent-glow);
+            transform: translateY(-2px);
+        }
         .btn-outline {
-            background: transparent; color: var(--text-primary);
+            background: transparent;
+            color: var(--text-primary);
             border: 2px solid var(--border);
         }
-        .btn-icon {
-            width: 42px; height: 42px; padding: 0; border-radius: 12px;
-            background: var(--bg-glass); border: 1px solid var(--border);
-            color: var(--text-primary); font-size: 1.1rem;
+        .btn-outline:hover {
+            border-color: var(--accent);
+            background: var(--bg-glass-hover);
+            transform: translateY(-2px);
         }
+        .btn-icon {
+            width: 42px;
+            height: 42px;
+            padding: 0;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .btn-icon:hover {
+            background: var(--bg-glass-hover);
+            transform: translateY(-2px);
+            box-shadow: var(--shadow-md);
+        }
+        .btn-icon:active {
+            transform: scale(0.9);
+        }
+        .btn-sm {
+            padding: 6px 14px;
+            font-size: 0.8rem;
+            border-radius: 10px;
+        }
+        .btn-xs {
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            border-radius: 8px;
+        }
+
+        /* Ripple Effect */
+        .ripple-effect {
+            position: absolute;
+            border-radius: 50%;
+            background: var(--ripple);
+            transform: scale(0);
+            animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            width: 48px;
+            height: 48px;
+            border-radius: 14px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            color: var(--text-primary);
+        }
+        .theme-toggle:hover {
+            transform: rotate(20deg) scale(1.05);
+            box-shadow: var(--shadow-md);
+        }
+        .theme-toggle .icon-sun,
+        .theme-toggle .icon-moon {
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            position: absolute;
+        }
+        [data-theme="dark"] .theme-toggle .icon-sun {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+        [data-theme="dark"] .theme-toggle .icon-moon {
+            opacity: 0;
+            transform: rotate(-90deg) scale(0.5);
+        }
+        [data-theme="light"] .theme-toggle .icon-sun {
+            opacity: 0;
+            transform: rotate(90deg) scale(0.5);
+        }
+        [data-theme="light"] .theme-toggle .icon-moon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        /* Google Sign-In Button */
         .google-btn {
-            display: flex; align-items: center; gap: 8px;
-            padding: 10px 16px; background: var(--bg-glass);
-            border: 1px solid var(--border); border-radius: 14px;
-            cursor: pointer; font-weight: 600; font-size: 0.9rem;
-            color: var(--text-primary); transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 18px;
+            background: var(--bg-glass);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             white-space: nowrap;
         }
+        .google-btn:hover {
+            background: var(--bg-glass-hover);
+            box-shadow: var(--shadow-md);
+            transform: translateY(-2px);
+        }
+        .google-btn img {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+        }
         .google-btn.signed-in {
-            background: var(--gradient-1); color: #fff; border: none;
+            background: var(--gradient-1);
+            color: #fff;
+            border: none;
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
         }
 
-        /* --------- STATS ---------- */
+        /* Main Content */
+        .main-content {
+            margin-top: 32px;
+            animation: fadeInUp 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Stats Bar */
         .stats-bar {
-            display: flex; gap: 12px; margin-bottom: 24px; flex-wrap: wrap;
+            display: flex;
+            gap: 16px;
+            margin-bottom: 28px;
+            flex-wrap: wrap;
         }
         .stat-card {
-            flex: 1; min-width: 120px; padding: 18px 20px;
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: 18px; text-align: center; transition: all 0.4s;
-            cursor: pointer; box-shadow: var(--shadow-sm);
-        }
-        .stat-number {
-            font-family: 'Space Grotesk', sans-serif;
-            font-size: 2.2rem; font-weight: 700;
-            background: var(--gradient-1); -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent; background-clip: text;
-        }
-
-        /* --------- TABS ---------- */
-        .tabs-container {
-            display: flex; gap: 6px; margin-bottom: 20px;
-            background: var(--bg-tertiary); padding: 6px;
-            border-radius: 16px; flex-wrap: wrap;
-        }
-        .tab-btn {
-            flex: 1; min-width: 90px; padding: 12px 16px;
-            background: transparent; border: none; border-radius: 12px;
-            font-weight: 600; font-size: 0.85rem; color: var(--text-secondary);
-            cursor: pointer; transition: all 0.4s;
-        }
-        .tab-btn.active {
-            background: var(--card-bg); color: var(--text-primary);
+            flex: 1;
+            min-width: 140px;
+            padding: 20px 24px;
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            text-align: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
             box-shadow: var(--shadow-sm);
+            animation: cardAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
-
-        /* --------- CARD GRID ---------- */
-        .card-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 18px;
-            min-height: 200px;
+        .stat-card:nth-child(1) {
+            animation-delay: 0.05s;
         }
-        .show-card {
-            background: var(--card-bg); border: 1px solid var(--border);
-            border-radius: 20px; padding: 22px; transition: all 0.4s;
-            cursor: pointer; box-shadow: var(--shadow-sm);
-            animation: cardAppear 0.5s ease forwards;
+        .stat-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+        .stat-card:nth-child(3) {
+            animation-delay: 0.15s;
+        }
+        .stat-card:nth-child(4) {
+            animation-delay: 0.2s;
         }
         @keyframes cardAppear {
-            from { opacity: 0; transform: translateY(20px) scale(0.95); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
+            from {
+                opacity: 0;
+                transform: translateY(20px) scale(0.95);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .stat-card:hover {
+            transform: translateY(-6px);
+            box-shadow: var(--shadow-lg);
+            border-color: var(--accent-light);
+        }
+        .stat-card .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: block;
+            transition: transform 0.3s ease;
+        }
+        .stat-card:hover .stat-icon {
+            transform: scale(1.2) rotate(-5deg);
+        }
+        .stat-card .stat-number {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 2.4rem;
+            font-weight: 700;
+            background: var(--gradient-1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-card .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            font-weight: 500;
+            margin-top: 2px;
+        }
+        .stat-card.watching .stat-number {
+            background: var(--gradient-2);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .stat-card.watched .stat-number {
+            background: var(--gradient-3);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
-        /* --------- MODAL ---------- */
+        /* Tabs */
+        .tabs-container {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 24px;
+            background: var(--bg-tertiary);
+            padding: 6px;
+            border-radius: 16px;
+            flex-wrap: wrap;
+        }
+        .tab-btn {
+            flex: 1;
+            min-width: 100px;
+            padding: 14px 20px;
+            border: none;
+            background: transparent;
+            border-radius: 12px;
+            cursor: pointer;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            white-space: nowrap;
+            letter-spacing: 0.2px;
+        }
+        .tab-btn.active {
+            background: var(--card-bg);
+            color: var(--text-primary);
+            box-shadow: var(--shadow-sm);
+            animation: tabPop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes tabPop {
+            0% {
+                transform: scale(0.9);
+            }
+            60% {
+                transform: scale(1.04);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+        .tab-btn:hover:not(.active) {
+            color: var(--text-primary);
+            background: rgba(128, 128, 128, 0.08);
+        }
+        .tab-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 22px;
+            height: 22px;
+            padding: 0 7px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            margin-left: 8px;
+            background: var(--accent-light);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+        .tab-btn.active .tab-badge {
+            background: var(--accent);
+            animation: badgeBounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        @keyframes badgeBounce {
+            0%,
+            100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.4);
+            }
+        }
+
+        /* Section Header */
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .section-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+        }
+        .sort-select {
+            padding: 10px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.85rem;
+        }
+        .sort-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        /* Card Grid */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 20px;
+            min-height: 200px;
+        }
+        .card-grid.empty-state {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 300px;
+        }
+
+        /* Show/Movie Card */
+        .show-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 24px;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            animation: cardAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+        .show-card:hover {
+            transform: translateY(-8px) rotateX(2deg);
+            box-shadow: var(--shadow-xl);
+            border-color: var(--accent-light);
+            background: var(--card-hover-bg);
+        }
+        .show-card:active {
+            transform: scale(0.98);
+        }
+        .show-card .card-glow {
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at center, var(--accent-glow) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.4s ease;
+            pointer-events: none;
+        }
+        .show-card:hover .card-glow {
+            opacity: 0.5;
+        }
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .card-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 1.2rem;
+            letter-spacing: -0.3px;
+            color: var(--text-primary);
+        }
+        .card-type-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+        .badge-movie {
+            background: #e8d5f5;
+            color: #6c3fa0;
+        }
+        .badge-show {
+            background: #d5e8f5;
+            color: #3f6ca0;
+        }
+        [data-theme="dark"] .badge-movie {
+            background: #2a1a3a;
+            color: #c4a0e8;
+        }
+        [data-theme="dark"] .badge-show {
+            background: #1a2a3a;
+            color: #a0c4e8;
+        }
+        .card-status {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-bottom: 14px;
+            position: relative;
+            z-index: 1;
+        }
+        .status-watching {
+            background: rgba(255, 107, 107, 0.15);
+            color: var(--tag-watching);
+        }
+        .status-planning {
+            background: rgba(255, 169, 77, 0.15);
+            color: var(--tag-planning);
+        }
+        .status-watched {
+            background: rgba(81, 207, 102, 0.15);
+            color: var(--tag-watched);
+        }
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            animation: statusPulse 1.5s ease-in-out infinite;
+        }
+        .status-watching .status-dot {
+            background: var(--tag-watching);
+        }
+        .status-planning .status-dot {
+            background: var(--tag-planning);
+            animation-duration: 2.5s;
+        }
+        .status-watched .status-dot {
+            background: var(--tag-watched);
+            animation: none;
+        }
+        @keyframes statusPulse {
+            0%,
+            100% {
+                opacity: 1;
+                box-shadow: 0 0 0 0 currentColor;
+            }
+            50% {
+                opacity: 0.6;
+                box-shadow: 0 0 0 6px transparent;
+            }
+        }
+        .card-dates {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            position: relative;
+            z-index: 1;
+        }
+        .card-dates span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .card-rating {
+            display: flex;
+            gap: 2px;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        .card-rating .star {
+            color: var(--star-filled);
+            font-size: 1rem;
+            filter: drop-shadow(0 0 3px rgba(255, 193, 7, 0.5));
+        }
+        .card-rating .star.empty {
+            color: var(--star-empty);
+            filter: none;
+        }
+        .card-remarks {
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            font-style: italic;
+            line-height: 1.5;
+            position: relative;
+            z-index: 1;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+        .card-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Empty State */
+        .empty-state-content {
+            text-align: center;
+            animation: floatIdle 3s ease-in-out infinite;
+        }
+        @keyframes floatIdle {
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-15px);
+            }
+        }
+        .empty-state-icon {
+            font-size: 5rem;
+            display: block;
+            margin-bottom: 16px;
+            filter: grayscale(0.3);
+        }
+        .empty-state-text {
+            font-size: 1.1rem;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+
+        /* Modal */
         .modal-overlay {
-            position: fixed; inset: 0; background: var(--modal-overlay);
-            z-index: 200; display: flex; align-items: center;
-            justify-content: center; padding: 20px;
+            position: fixed;
+            inset: 0;
+            background: var(--modal-overlay);
+            z-index: 200;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            animation: fadeIn 0.3s ease;
             backdrop-filter: blur(4px);
         }
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
         .modal {
-            background: var(--bg-secondary); border: 1px solid var(--border);
-            border-radius: 24px; padding: 28px; width: 100%;
-            max-width: 520px; max-height: 85vh; overflow-y: auto;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            width: 100%;
+            max-width: 550px;
+            max-height: 85vh;
+            overflow-y: auto;
             box-shadow: var(--shadow-xl);
+            animation: modalSlideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+            position: relative;
+        }
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(40px) scale(0.9);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        .modal-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+        .modal-close {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: var(--bg-glass);
+            cursor: pointer;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            color: var(--text-primary);
+        }
+        .modal-close:hover {
+            background: #ff475720;
+            border-color: #ff4757;
+            color: #ff4757;
+            transform: rotate(90deg);
+        }
+        .form-group {
+            margin-bottom: 18px;
+        }
+        .form-label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.85rem;
+            margin-bottom: 6px;
+            color: var(--text-secondary);
+            letter-spacing: 0.3px;
+        }
+        .form-input,
+        .form-textarea,
+        .form-select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            border: 1px solid var(--input-border);
+            background: var(--input-bg);
+            color: var(--text-primary);
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            resize: vertical;
+        }
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+        .form-textarea {
+            min-height: 90px;
+        }
+        .star-rating-input {
+            display: flex;
+            gap: 4px;
+            font-size: 2rem;
+            cursor: pointer;
+        }
+        .star-rating-input .star-input {
+            color: var(--star-empty);
+            transition: all 0.2s ease;
+            cursor: pointer;
+        }
+        .star-rating-input .star-input.active,
+        .star-rating-input .star-input:hover {
+            color: var(--star-filled);
+            transform: scale(1.2);
+            filter: drop-shadow(0 0 6px rgba(255, 193, 7, 0.6));
+        }
+        .star-rating-input:hover .star-input {
+            color: var(--star-filled);
+        }
+        .star-rating-input .star-input:hover~.star-input {
+            color: var(--star-empty);
+            transform: scale(1);
+            filter: none;
+        }
+        .form-row {
+            display: flex;
+            gap: 12px;
+        }
+        .form-row .form-group {
+            flex: 1;
         }
 
-        /* --------- TOAST ---------- */
+        /* Toast */
         .toast-container {
-            position: fixed; bottom: 24px; right: 24px; z-index: 300;
-            display: flex; flex-direction: column; gap: 10px;
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            z-index: 300;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast {
+            padding: 14px 22px;
+            border-radius: 14px;
+            background: var(--toast-bg);
+            color: var(--toast-text);
+            font-weight: 600;
+            font-size: 0.9rem;
+            box-shadow: var(--shadow-lg);
+            animation: toastIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+                toastOut 0.4s ease 2.5s forwards;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            max-width: 400px;
+        }
+        @keyframes toastIn {
+            from {
+                opacity: 0;
+                transform: translateX(100px) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+        }
+        @keyframes toastOut {
+            from {
+                opacity: 1;
+                transform: translateX(0) scale(1);
+            }
+            to {
+                opacity: 0;
+                transform: translateX(80px) scale(0.8);
+            }
+        }
+        .toast.success {
+            border-left: 4px solid #51cf66;
+        }
+        .toast.error {
+            border-left: 4px solid #ff6b6b;
         }
 
-        /* Mobile refinements */
+        /* Confetti */
+        .confetti-piece {
+            position: fixed;
+            z-index: 250;
+            pointer-events: none;
+            animation: confettiFall linear forwards;
+        }
+        @keyframes confettiFall {
+            0% {
+                transform: translateY(-100vh) rotate(0deg) scale(1);
+                opacity: 1;
+            }
+            80% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(105vh) rotate(720deg) scale(0.3);
+                opacity: 0;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .app-container { padding: 0 12px; }
-            .navbar { padding: 12px 16px; border-radius: 16px; }
-            .nav-brand { font-size: 1.1rem; gap: 6px; }
-            .nav-brand .logo-icon { width: 34px; height: 34px; font-size: 1rem; }
-            .btn { padding: 8px 14px; font-size: 0.8rem; }
-            .google-btn span { display: none; }
+            .navbar {
+                padding: 12px 16px;
+                border-radius: 16px;
+                margin-top: 10px;
+            }
+            .nav-brand {
+                font-size: 1.2rem;
+                gap: 8px;
+            }
+            .nav-brand .logo-icon {
+                width: 36px;
+                height: 36px;
+                font-size: 1rem;
+                border-radius: 10px;
+            }
+            .btn {
+                padding: 8px 14px;
+                font-size: 0.8rem;
+            }
+            .google-btn {
+                padding: 8px 12px;
+                font-size: 0.8rem;
+                gap: 6px;
+            }
+            .google-btn span {
+                display: none;
+            }
             .card-grid {
                 grid-template-columns: 1fr;
-                max-height: 70vh;
-                overflow-y: auto;
-                padding-right: 4px;
             }
-            .stat-card { padding: 12px; min-width: 80px; }
-            .stat-number { font-size: 1.5rem; }
-            .modal { margin: 10px; max-height: 90vh; }
-            .form-row { flex-direction: column; gap: 0; }
+            .stats-bar {
+                gap: 8px;
+            }
+            .stat-card {
+                padding: 14px 16px;
+                min-width: 100px;
+            }
+            .stat-card .stat-number {
+                font-size: 1.6rem;
+            }
+            .modal {
+                padding: 20px;
+                border-radius: 18px;
+            }
+            .form-row {
+                flex-direction: column;
+                gap: 0;
+            }
+            .tabs-container {
+                gap: 3px;
+                padding: 4px;
+                border-radius: 12px;
+            }
+            .tab-btn {
+                padding: 10px 12px;
+                font-size: 0.78rem;
+                border-radius: 10px;
+            }
+        }
+
+        @media (max-width: 400px) {
+            .nav-actions {
+                gap: 6px;
+            }
+            .btn-icon {
+                width: 34px;
+                height: 34px;
+                border-radius: 10px;
+                font-size: 0.9rem;
+            }
+            .theme-toggle {
+                width: 38px;
+                height: 38px;
+                border-radius: 10px;
+            }
         }
     </style>
 </head>
 <body>
 
-    <!-- LOADING SCREEN -->
-    <div id="loadingScreen">
-        <div class="loader-logo">🎬</div>
-        <h2 style="font-family: 'Space Grotesk', sans-serif; font-weight: 700; letter-spacing: -0.5px;">CineVault</h2>
-        <div class="loader-bar"><div class="loader-bar-fill"></div></div>
-        <p style="margin-top: 1rem; color: var(--text-secondary); font-size: 0.9rem;">Preparing your watchlist...</p>
-    </div>
-
-    <!-- PARTICLE BACKGROUND -->
+    <!-- Particle Background -->
     <div class="particles-container" id="particlesContainer"></div>
+
+    <!-- Grid Background -->
     <div class="grid-bg"></div>
 
-    <!-- APP -->
+    <!-- App Container -->
     <div class="app-container">
+        <!-- Navigation -->
         <nav class="navbar" id="navbar">
             <div class="nav-brand" onclick="location.reload()">
-                <div class="logo-icon">🎬</div> <span>CineVault</span>
+                <div class="logo-icon">🎬</div>
+                <span>CineVault</span>
             </div>
             <div class="nav-actions">
-                <button class="google-btn" id="googleSignBtn" onclick="handleGoogleSignIn()">
-                    <i class="fa-brands fa-google"></i> <span>Sign In</span>
+                <button class="google-btn" id="googleSignBtn" onclick="handleGoogleSignIn()" title="Sign in with Google">
+                    <i class="fa-brands fa-google"></i>
+                    <span>Sign In</span>
                 </button>
-                <button class="btn-icon" onclick="exportData()"><i class="fa-solid fa-download"></i></button>
-                <button class="btn-icon" onclick="document.getElementById('importFileInput').click()"><i class="fa-solid fa-upload"></i></button>
+                <button class="btn-icon" id="exportBtn" onclick="exportData()" title="Export JSON">
+                    <i class="fa-solid fa-download"></i>
+                </button>
+                <button class="btn-icon" id="importBtn" onclick="document.getElementById('importFileInput').click()" title="Import JSON">
+                    <i class="fa-solid fa-upload"></i>
+                </button>
                 <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importData(event)">
-                <button class="btn-icon" id="themeToggle" onclick="toggleTheme()"><i class="fa-solid fa-moon"></i></button>
+                <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">
+                    <i class="fa-solid fa-sun icon-sun"></i>
+                    <i class="fa-solid fa-moon icon-moon"></i>
+                </button>
             </div>
         </nav>
 
-        <div class="main-content" style="margin-top:28px;">
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Stats Bar -->
             <div class="stats-bar" id="statsBar">
-                <div class="stat-card" onclick="switchTab('watching')"><span>👀</span><div class="stat-number" id="statWatching">0</div><small>Watching</small></div>
-                <div class="stat-card" onclick="switchTab('planning')"><span>📋</span><div class="stat-number" id="statPlanning">0</div><small>Planned</small></div>
-                <div class="stat-card" onclick="switchTab('watched')"><span>✅</span><div class="stat-number" id="statWatched">0</div><small>Watched</small></div>
-                <div class="stat-card"><span>⭐</span><div class="stat-number" id="statAvgRating">0.0</div><small>Avg Rating</small></div>
-            </div>
-
-            <div class="tabs-container">
-                <button class="tab-btn active" data-tab="all" onclick="switchTab('all')">All <span class="tab-badge" id="badgeAll">0</span></button>
-                <button class="tab-btn" data-tab="watching" onclick="switchTab('watching')">Watching <span id="badgeWatching">0</span></button>
-                <button class="tab-btn" data-tab="planning" onclick="switchTab('planning')">Planning <span id="badgePlanning">0</span></button>
-                <button class="tab-btn" data-tab="watched" onclick="switchTab('watched')">Watched <span id="badgeWatched">0</span></button>
-            </div>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px;">
-                <h2 id="sectionTitle" style="font-family:'Space Grotesk',sans-serif;">All Entries</h2>
-                <div style="display:flex; gap:8px; align-items:center;">
-                    <select id="sortSelect" onchange="renderCards()" style="padding:10px; border-radius:12px; background:var(--input-bg); border:1px solid var(--input-border); color:var(--text-primary);">
-                        <option value="newest">Newest</option><option value="oldest">Oldest</option>
-                        <option value="rating-high">Rating: High</option><option value="title-asc">Title A-Z</option>
-                    </select>
-                    <button class="btn btn-primary" onclick="openAddModal()"><i class="fa-solid fa-plus"></i> Add</button>
+                <div class="stat-card" onclick="switchTab('watching')">
+                    <span class="stat-icon">👀</span>
+                    <div class="stat-number watching" id="statWatching">0</div>
+                    <div class="stat-label">Currently Watching</div>
+                </div>
+                <div class="stat-card" onclick="switchTab('planning')">
+                    <span class="stat-icon">📋</span>
+                    <div class="stat-number" id="statPlanning">0</div>
+                    <div class="stat-label">Planned</div>
+                </div>
+                <div class="stat-card watched" onclick="switchTab('watched')">
+                    <span class="stat-icon">✅</span>
+                    <div class="stat-number watched" id="statWatched">0</div>
+                    <div class="stat-label">Completed</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-icon">⭐</span>
+                    <div class="stat-number" id="statAvgRating">0.0</div>
+                    <div class="stat-label">Avg Rating</div>
                 </div>
             </div>
 
+            <!-- Tabs -->
+            <div class="tabs-container" id="tabsContainer">
+                <button class="tab-btn active" data-tab="all" onclick="switchTab('all')">
+                    📺 All <span class="tab-badge" id="badgeAll">0</span>
+                </button>
+                <button class="tab-btn" data-tab="watching" onclick="switchTab('watching')">
+                    👀 Watching <span class="tab-badge" id="badgeWatching">0</span>
+                </button>
+                <button class="tab-btn" data-tab="planning" onclick="switchTab('planning')">
+                    📋 Planning <span class="tab-badge" id="badgePlanning">0</span>
+                </button>
+                <button class="tab-btn" data-tab="watched" onclick="switchTab('watched')">
+                    ✅ Watched <span class="tab-badge" id="badgeWatched">0</span>
+                </button>
+            </div>
+
+            <!-- Section Header -->
+            <div class="section-header">
+                <h2 class="section-title" id="sectionTitle">All Entries</h2>
+                <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                    <select class="sort-select" id="sortSelect" onchange="renderCards()">
+                        <option value="newest">🕐 Newest First</option>
+                        <option value="oldest">📅 Oldest First</option>
+                        <option value="rating-high">⭐ Rating: High to Low</option>
+                        <option value="rating-low">⭐ Rating: Low to High</option>
+                        <option value="title-asc">🔤 Title: A-Z</option>
+                        <option value="title-desc">🔤 Title: Z-A</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="openAddModal()">
+                        <i class="fa-solid fa-plus"></i> Add New
+                    </button>
+                </div>
+            </div>
+
+            <!-- Card Grid -->
             <div class="card-grid" id="cardGrid"></div>
         </div>
     </div>
 
-    <!-- MODAL -->
+    <!-- Modal Overlay (hidden by default) -->
     <div class="modal-overlay" id="modalOverlay" style="display:none;" onclick="closeModal(event)">
         <div class="modal" id="modal" onclick="event.stopPropagation()">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                <h3 id="modalTitle">Add Entry</h3>
-                <button onclick="closeModal()" style="background:var(--bg-glass); border:1px solid var(--border); border-radius:12px; width:36px; height:36px; cursor:pointer;">✕</button>
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Add New Entry</h3>
+                <button class="modal-close" onclick="closeModal()">✕</button>
             </div>
             <form id="entryForm" onsubmit="saveEntry(event)">
-                <input type="hidden" id="entryId"><input type="hidden" id="entryRating" value="0">
-                <div style="margin-bottom:14px;"><label>Title *</label><input class="form-input" id="entryTitle" required></div>
-                <div style="display:flex; gap:12px; margin-bottom:14px;">
-                    <div style="flex:1;"><label>Type</label><select id="entryType" class="form-input"><option value="movie">Movie</option><option value="show">TV Show</option></select></div>
-                    <div style="flex:1;"><label>Status</label><select id="entryStatus" class="form-input" onchange="handleStatusChange()"><option value="watching">Watching</option><option value="planning">Planning</option><option value="watched">Watched</option></select></div>
+                <input type="hidden" id="entryId" value="">
+                <div class="form-group">
+                    <label class="form-label">Title *</label>
+                    <input type="text" class="form-input" id="entryTitle" placeholder="Enter movie or show title..." required>
                 </div>
-                <div style="display:flex; gap:12px; margin-bottom:14px;">
-                    <div style="flex:1;"><label>Start Date</label><input type="date" id="entryStartDate" class="form-input"></div>
-                    <div style="flex:1;"><label>Finished Date</label><input type="date" id="entryFinishedDate" class="form-input"></div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Type</label>
+                        <select class="form-select" id="entryType">
+                            <option value="movie">🎥 Movie</option>
+                            <option value="show">📺 TV Show</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Status</label>
+                        <select class="form-select" id="entryStatus" onchange="handleStatusChange()">
+                            <option value="watching">👀 Watching</option>
+                            <option value="planning">📋 Planning</option>
+                            <option value="watched">✅ Watched</option>
+                        </select>
+                    </div>
                 </div>
-                <div style="margin-bottom:14px;"><label>Rating</label><div id="starRatingInput" style="font-size:2rem; cursor:pointer;">★★★★★</div></div>
-                <div style="margin-bottom:14px;"><label>Remarks</label><textarea id="entryRemarks" class="form-input" rows="3"></textarea></div>
-                <button type="submit" class="btn btn-primary" style="width:100%;">Save Entry</button>
-                <button type="button" id="deleteEntryBtn" style="display:none; width:100%; margin-top:8px; background:#ff475720; border:1px solid #ff4757; color:#ff4757;" onclick="deleteEntry()">Delete</button>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" class="form-input" id="entryStartDate">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Finished Date</label>
+                        <input type="date" class="form-input" id="entryFinishedDate">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Rating</label>
+                    <div class="star-rating-input" id="starRatingInput">
+                        <span class="star-input" data-rating="1">★</span>
+                        <span class="star-input" data-rating="2">★</span>
+                        <span class="star-input" data-rating="3">★</span>
+                        <span class="star-input" data-rating="4">★</span>
+                        <span class="star-input" data-rating="5">★</span>
+                    </div>
+                    <input type="hidden" id="entryRating" value="0">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Remarks</label>
+                    <textarea class="form-textarea" id="entryRemarks" placeholder="Add your thoughts, notes, or remarks..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center;padding:14px;font-size:1rem;">
+                    <i class="fa-solid fa-save"></i> Save Entry
+                </button>
+                <button type="button" class="btn btn-outline" id="deleteEntryBtn" style="width:100%;justify-content:center;margin-top:8px;display:none;color:#ff4757;border-color:#ff475720;" onclick="deleteEntry()">
+                    <i class="fa-solid fa-trash"></i> Delete Entry
+                </button>
             </form>
         </div>
     </div>
 
+    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
 
-    <!-- Google Identity Services script (loaded asynchronously) -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-
     <script>
-        (function() {
-            // ========== CONFIGURATION ==========
-            const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com'; // <-- REPLACE WITH YOUR CLIENT ID
-            const DRIVE_FILE_NAME = 'cinevault-data.json';
+        // ==================== APP STATE ====================
+        const APP_STATE = {
+            entries: [],
+            currentTab: 'all',
+            currentSort: 'newest',
+            isGoogleSignedIn: false,
+            googleUser: null,
+            googleAccessToken: null,
+            googleFileId: null,
+            theme: 'dark',
+            editingEntryId: null,
+            selectedRating: 0,
+        };
 
-            // ========== APP STATE ==========
-            const state = {
-                entries: [],
-                currentTab: 'all',
-                currentSort: 'newest',
-                isGoogleSignedIn: false,
-                googleUser: null,
-                googleAccessToken: null,
-                googleFileId: null,
-                theme: 'dark',
-                editingEntryId: null,
-                selectedRating: 0,
-            };
+        const DRIVE_FILE_NAME = 'cinevault-data.json';
+        const DRIVE_FOLDER_MIME = 'application/vnd.google-apps.folder';
+        const DRIVE_JSON_MIME = 'application/json';
 
-            // ========== DOM ELEMENTS ==========
-            const $ = (s) => document.querySelector(s);
-            const cardGrid = $('#cardGrid');
-            const modalOverlay = $('#modalOverlay');
-            const sectionTitle = $('#sectionTitle');
-            const toastContainer = $('#toastContainer');
-            const starRatingInput = $('#starRatingInput');
-            const entryStatusSelect = $('#entryStatus');
-            const entryFinishedDate = $('#entryFinishedDate');
-            const deleteEntryBtn = $('#deleteEntryBtn');
-            const entryIdInput = $('#entryId');
-            const entryRatingInput = $('#entryRating');
-            const modalTitle = $('#modalTitle');
-            const googleSignBtn = $('#googleSignBtn');
-            const importFileInput = $('#importFileInput');
-            const loadingScreen = $('#loadingScreen');
+        // ==================== DOM ELEMENTS ====================
+        const $ = (sel) => document.querySelector(sel);
+        const $$ = (sel) => document.querySelectorAll(sel);
 
-            // ========== INITIAL LOADING SCREEN ==========
-            window.addEventListener('load', () => {
-                setTimeout(() => {
-                    if (loadingScreen) {
-                        loadingScreen.style.opacity = '0';
-                        loadingScreen.style.visibility = 'hidden';
-                    }
-                }, 1200);
+        const cardGrid = $('#cardGrid');
+        const modalOverlay = $('#modalOverlay');
+        const sectionTitle = $('#sectionTitle');
+        const toastContainer = $('#toastContainer');
+        const starRatingInput = $('#starRatingInput');
+        const entryStatusSelect = $('#entryStatus');
+        const entryFinishedDate = $('#entryFinishedDate');
+        const deleteEntryBtn = $('#deleteEntryBtn');
+        const entryIdInput = $('#entryId');
+        const entryRatingInput = $('#entryRating');
+        const modalTitle = $('#modalTitle');
+        const googleSignBtn = $('#googleSignBtn');
+        const navbar = $('#navbar');
+        const importFileInput = $('#importFileInput');
+
+        // ==================== INITIALIZATION ====================
+        function init() {
+            // Load theme
+            const savedTheme = localStorage.getItem('cinevault-theme') || 'dark';
+            APP_STATE.theme = savedTheme;
+            document.documentElement.setAttribute('data-theme', savedTheme);
+
+            // Load entries from localStorage
+            loadFromLocalStorage();
+
+            // Load Google auth state
+            checkGoogleAuthState();
+
+            // Create particles
+            createParticles();
+
+            // Render
+            updateAllUI();
+            renderCards();
+
+            // Scroll listener for navbar
+            window.addEventListener('scroll', () => {
+                if (window.scrollY > 50) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
             });
 
-            // ========== PARTICLES ==========
-            function createParticles() {
-                const container = $('#particlesContainer');
-                for (let i = 0; i < 30; i++) {
-                    const p = document.createElement('div');
-                    p.className = 'particle';
-                    p.style.width = p.style.height = (Math.random() * 6 + 3) + 'px';
-                    p.style.left = Math.random() * 100 + '%';
-                    p.style.animationDuration = (Math.random() * 12 + 8) + 's';
-                    p.style.animationDelay = Math.random() * 8 + 's';
-                    container.appendChild(p);
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeModal();
+                if (e.ctrlKey && e.key === 'n') {
+                    e.preventDefault();
+                    openAddModal();
                 }
-            }
+            });
 
-            // ========== THEME ==========
-            function toggleTheme() {
-                state.theme = state.theme === 'dark' ? 'light' : 'dark';
-                document.documentElement.setAttribute('data-theme', state.theme);
-                localStorage.setItem('cinevault-theme', state.theme);
-                showToast(state.theme === 'dark' ? '🌙 Dark mode' : '☀️ Light mode', 'success');
-            }
+            // Star rating click handler
+            setupStarRating();
 
-            // ========== TOAST ==========
-            function showToast(msg, type = 'success') {
-                const toast = document.createElement('div');
-                toast.className = 'toast';
-                toast.style.cssText = `padding:12px 20px; border-radius:14px; background:var(--toast-bg); color:var(--toast-text); font-weight:600; box-shadow:var(--shadow-lg); margin-top:8px;`;
-                toast.textContent = msg;
-                toastContainer.appendChild(toast);
-                setTimeout(() => toast.remove(), 3000);
-            }
+            // Handle import file
+            importFileInput.addEventListener('change', importData);
 
-            // ========== CONFETTI ==========
-            function spawnConfetti(count = 60) {
-                for (let i = 0; i < count; i++) {
-                    const piece = document.createElement('div');
-                    piece.style.cssText = `position:fixed; z-index:250; width:${Math.random()*10+6}px; height:${Math.random()*10+6}px; background:hsl(${Math.random()*360},80%,60%); left:${Math.random()*100}%; top:-20px; border-radius:2px; animation:confettiFall ${Math.random()*2+2}s linear forwards;`;
-                    document.body.appendChild(piece);
-                    setTimeout(() => piece.remove(), 3000);
+            console.log('🎬 CineVault initialized!');
+            console.log('📦 Entries loaded:', APP_STATE.entries.length);
+            console.log('💾 Storage:', APP_STATE.isGoogleSignedIn ? 'Google Drive + Local' : 'Local Storage');
+            console.log('🎨 Theme:', APP_STATE.theme);
+            console.log('💡 Tip: Press Ctrl+N to add a new entry, Esc to close modal');
+        }
+
+        // ==================== PARTICLES ====================
+        function createParticles() {
+            const container = $('#particlesContainer');
+            const colors = ['#6c5ce7', '#a29bfe', '#ff6b6b', '#ffa94d', '#51cf66', '#8b7cf7', '#ffc107'];
+            for (let i = 0; i < 35; i++) {
+                const particle = document.createElement('div');
+                particle.classList.add('particle');
+                const size = Math.random() * 8 + 3;
+                particle.style.width = size + 'px';
+                particle.style.height = size + 'px';
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.animationDuration = Math.random() * 15 + 10 + 's';
+                particle.style.animationDelay = Math.random() * 10 + 's';
+                particle.style.background = colors[Math.floor(Math.random() * colors.length)];
+                container.appendChild(particle);
+            }
+        }
+
+        // ==================== THEME ====================
+        function toggleTheme() {
+            APP_STATE.theme = APP_STATE.theme === 'dark' ? 'light' : 'dark';
+            document.documentElement.setAttribute('data-theme', APP_STATE.theme);
+            localStorage.setItem('cinevault-theme', APP_STATE.theme);
+            showToast(
+                APP_STATE.theme === 'dark' ? '🌙 Dark mode activated' : '☀️ Light mode activated',
+                'success'
+            );
+            // Animate the toggle
+            const btn = $('#themeToggle');
+            btn.style.transform = 'rotate(360deg) scale(1.2)';
+            setTimeout(() => { btn.style.transform = ''; }, 500);
+        }
+
+        // ==================== TOAST ====================
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.classList.add('toast', type);
+            const icons = { success: '✅', error: '❌', info: 'ℹ️' };
+            toast.innerHTML = `<span>${icons[type] || '📢'}</span> ${message}`;
+            toastContainer.appendChild(toast);
+            setTimeout(() => {
+                if (toast.parentNode) toast.remove();
+            }, 3000);
+        }
+
+        // ==================== CONFETTI ====================
+        function spawnConfetti(count = 60) {
+            const colors = ['#ff6b6b', '#ffa94d', '#ffc107', '#51cf66', '#6c5ce7', '#a29bfe', '#ff85a2',
+            '#00d2ff'];
+            for (let i = 0; i < count; i++) {
+                const piece = document.createElement('div');
+                piece.classList.add('confetti-piece');
+                piece.style.left = Math.random() * 100 + '%';
+                piece.style.top = -(Math.random() * 40 + 10) + 'px';
+                piece.style.width = (Math.random() * 10 + 6) + 'px';
+                piece.style.height = (Math.random() * 10 + 6) + 'px';
+                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
+                piece.style.borderRadius = Math.random() > 0.5 ? '50%' : '3px';
+                piece.style.animationDuration = (Math.random() * 2 + 2.5) + 's';
+                piece.style.animationDelay = Math.random() * 1 + 's';
+                document.body.appendChild(piece);
+                setTimeout(() => {
+                    if (piece.parentNode) piece.remove();
+                }, 4000);
+            }
+        }
+
+        // ==================== RIPPLE EFFECT ====================
+        function addRippleEffect(e) {
+            const btn = e.currentTarget;
+            const ripple = document.createElement('span');
+            ripple.classList.add('ripple-effect');
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size / 2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size / 2) + 'px';
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+        }
+
+        // Attach ripple to all buttons
+        document.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn, .btn-icon, .btn-outline, .btn-primary, .google-btn');
+            if (btn) addRippleEffect(e);
+        });
+
+        // ==================== STAR RATING ====================
+        function setupStarRating() {
+            const stars = starRatingInput.querySelectorAll('.star-input');
+            stars.forEach(star => {
+                star.addEventListener('click', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    APP_STATE.selectedRating = rating;
+                    entryRatingInput.value = rating;
+                    updateStarDisplay(rating);
+                });
+                star.addEventListener('mouseenter', () => {
+                    const rating = parseInt(star.dataset.rating);
+                    updateStarDisplay(rating);
+                });
+            });
+            starRatingInput.addEventListener('mouseleave', () => {
+                updateStarDisplay(APP_STATE.selectedRating);
+            });
+        }
+
+        function updateStarDisplay(rating) {
+            const stars = starRatingInput.querySelectorAll('.star-input');
+            stars.forEach(star => {
+                const starRating = parseInt(star.dataset.rating);
+                if (starRating <= rating) {
+                    star.classList.add('active');
+                } else {
+                    star.classList.remove('active');
                 }
+            });
+        }
+
+        function resetStarRating() {
+            APP_STATE.selectedRating = 0;
+            entryRatingInput.value = 0;
+            updateStarDisplay(0);
+        }
+
+        // ==================== MODAL ====================
+        function openAddModal() {
+            APP_STATE.editingEntryId = null;
+            entryIdInput.value = '';
+            modalTitle.textContent = '✨ Add New Entry';
+            deleteEntryBtn.style.display = 'none';
+            resetForm();
+            modalOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            $('#entryTitle').focus();
+        }
+
+        function openEditModal(entryId) {
+            const entry = APP_STATE.entries.find(e => e.id === entryId);
+            if (!entry) return;
+            APP_STATE.editingEntryId = entryId;
+            entryIdInput.value = entryId;
+            modalTitle.textContent = '✏️ Edit Entry';
+            deleteEntryBtn.style.display = 'block';
+            $('#entryTitle').value = entry.title || '';
+            $('#entryType').value = entry.type || 'movie';
+            $('#entryStatus').value = entry.status || 'watching';
+            $('#entryStartDate').value = entry.startDate || '';
+            $('#entryFinishedDate').value = entry.finishedDate || '';
+            $('#entryRemarks').value = entry.remarks || '';
+            APP_STATE.selectedRating = entry.rating || 0;
+            entryRatingInput.value = entry.rating || 0;
+            updateStarDisplay(entry.rating || 0);
+            handleStatusChange();
+            modalOverlay.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            $('#entryTitle').focus();
+        }
+
+        function closeModal(event) {
+            if (event && event.target !== modalOverlay) return;
+            modalOverlay.style.display = 'none';
+            document.body.style.overflow = '';
+            APP_STATE.editingEntryId = null;
+            resetForm();
+        }
+
+        function resetForm() {
+            $('#entryTitle').value = '';
+            $('#entryType').value = 'movie';
+            $('#entryStatus').value = 'watching';
+            $('#entryStartDate').value = '';
+            $('#entryFinishedDate').value = '';
+            $('#entryRemarks').value = '';
+            resetStarRating();
+            handleStatusChange();
+            entryIdInput.value = '';
+            deleteEntryBtn.style.display = 'none';
+        }
+
+        function handleStatusChange() {
+            const status = entryStatusSelect.value;
+            if (status === 'watched') {
+                entryFinishedDate.style.opacity = '1';
+                entryFinishedDate.required = false;
+            } else if (status === 'planning') {
+                entryFinishedDate.style.opacity = '0.5';
+                entryFinishedDate.required = false;
+                entryFinishedDate.value = '';
+            } else {
+                entryFinishedDate.style.opacity = '1';
+                entryFinishedDate.required = false;
+            }
+        }
+
+        // ==================== CRUD OPERATIONS ====================
+        function saveEntry(event) {
+            event.preventDefault();
+            const title = $('#entryTitle').value.trim();
+            if (!title) {
+                showToast('Please enter a title!', 'error');
+                return;
             }
 
-            // ========== STAR RATING ==========
-            function setupStarRating() {
-                const stars = starRatingInput.querySelectorAll('span');
-                stars.forEach((star, idx) => {
-                    star.addEventListener('click', () => {
-                        state.selectedRating = idx + 1;
-                        entryRatingInput.value = idx + 1;
-                        updateStarDisplay(state.selectedRating);
-                    });
-                    star.addEventListener('mouseenter', () => updateStarDisplay(idx + 1));
-                });
-                starRatingInput.addEventListener('mouseleave', () => updateStarDisplay(state.selectedRating));
+            const entry = {
+                id: APP_STATE.editingEntryId || generateId(),
+                title: title,
+                type: $('#entryType').value,
+                status: $('#entryStatus').value,
+                startDate: $('#entryStartDate').value,
+                finishedDate: $('#entryFinishedDate').value,
+                rating: APP_STATE.selectedRating,
+                remarks: $('#entryRemarks').value.trim(),
+                createdAt: APP_STATE.editingEntryId ?
+                    (APP_STATE.entries.find(e => e.id === APP_STATE.editingEntryId)?.createdAt || new Date()
+                        .toISOString()) :
+                    new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+            };
+
+            if (APP_STATE.editingEntryId) {
+                // Update existing
+                const index = APP_STATE.entries.findIndex(e => e.id === APP_STATE.editingEntryId);
+                if (index !== -1) {
+                    APP_STATE.entries[index] = entry;
+                    showToast('✅ Entry updated successfully!', 'success');
+                }
+            } else {
+                // Add new
+                APP_STATE.entries.unshift(entry);
+                showToast('🎉 New entry added!', 'success');
+                spawnConfetti(40);
             }
 
-            function updateStarDisplay(rating) {
-                const stars = starRatingInput.querySelectorAll('span');
-                stars.forEach((star, idx) => {
-                    star.style.color = idx < rating ? 'var(--star-filled)' : 'var(--star-empty)';
-                });
+            // If marking as watched, celebrate
+            if (entry.status === 'watched' && entry.rating >= 4) {
+                setTimeout(() => spawnConfetti(80), 300);
             }
 
-            // ========== MODAL ==========
-            function openAddModal() {
-                state.editingEntryId = null;
-                entryIdInput.value = '';
-                modalTitle.textContent = '✨ Add Entry';
-                deleteEntryBtn.style.display = 'none';
-                resetForm();
-                modalOverlay.style.display = 'flex';
-                $('#entryTitle').focus();
-            }
+            saveData();
+            updateAllUI();
+            renderCards();
+            closeModal();
+        }
 
-            function openEditModal(id) {
-                const entry = state.entries.find(e => e.id === id);
-                if (!entry) return;
-                state.editingEntryId = id;
-                entryIdInput.value = id;
-                modalTitle.textContent = '✏️ Edit Entry';
-                deleteEntryBtn.style.display = 'block';
-                $('#entryTitle').value = entry.title;
-                $('#entryType').value = entry.type;
-                $('#entryStatus').value = entry.status;
-                $('#entryStartDate').value = entry.startDate || '';
-                $('#entryFinishedDate').value = entry.finishedDate || '';
-                $('#entryRemarks').value = entry.remarks || '';
-                state.selectedRating = entry.rating || 0;
-                entryRatingInput.value = entry.rating || 0;
-                updateStarDisplay(entry.rating || 0);
-                handleStatusChange();
-                modalOverlay.style.display = 'flex';
-            }
+        function deleteEntry() {
+            if (!APP_STATE.editingEntryId) return;
+            if (!confirm('Are you sure you want to delete this entry? This cannot be undone.')) return;
 
-            function closeModal(e) {
-                if (e && e.target !== modalOverlay) return;
-                modalOverlay.style.display = 'none';
-                state.editingEntryId = null;
-            }
+            APP_STATE.entries = APP_STATE.entries.filter(e => e.id !== APP_STATE.editingEntryId);
+            saveData();
+            updateAllUI();
+            renderCards();
+            closeModal();
+            showToast('🗑️ Entry deleted', 'info');
+        }
 
-            function resetForm() {
-                $('#entryTitle').value = '';
-                $('#entryType').value = 'movie';
-                $('#entryStatus').value = 'watching';
-                $('#entryStartDate').value = '';
-                $('#entryFinishedDate').value = '';
-                $('#entryRemarks').value = '';
-                state.selectedRating = 0;
-                entryRatingInput.value = 0;
-                updateStarDisplay(0);
-            }
+        function generateId() {
+            return 'entry_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
 
-            function handleStatusChange() {
-                entryFinishedDate.style.display = entryStatusSelect.value === 'planning' ? 'none' : 'block';
-            }
+        // ==================== RENDER ====================
+        function getFilteredEntries() {
+            if (APP_STATE.currentTab === 'all') return [...APP_STATE.entries];
+            return APP_STATE.entries.filter(e => e.status === APP_STATE.currentTab);
+        }
 
-            // ========== CRUD ==========
-            function saveEntry(e) {
-                e.preventDefault();
-                const title = $('#entryTitle').value.trim();
-                if (!title) return showToast('Title required', 'error');
-                const entry = {
-                    id: state.editingEntryId || 'e_' + Date.now(),
-                    title,
-                    type: $('#entryType').value,
-                    status: $('#entryStatus').value,
-                    startDate: $('#entryStartDate').value,
-                    finishedDate: $('#entryFinishedDate').value,
-                    rating: state.selectedRating,
-                    remarks: $('#entryRemarks').value.trim(),
-                    createdAt: state.editingEntryId ? (state.entries.find(e => e.id === state.editingEntryId)?.createdAt || new Date().toISOString()) : new Date().toISOString(),
+        function getSortedEntries(entries) {
+            const sort = APP_STATE.currentSort;
+            const sorted = [...entries];
+            switch (sort) {
+                case 'newest':
+                    return sorted.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+                case 'oldest':
+                    return sorted.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+                case 'rating-high':
+                    return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+                case 'rating-low':
+                    return sorted.sort((a, b) => (a.rating || 0) - (b.rating || 0));
+                case 'title-asc':
+                    return sorted.sort((a, b) => a.title.localeCompare(b.title));
+                case 'title-desc':
+                    return sorted.sort((a, b) => b.title.localeCompare(a.title));
+                default:
+                    return sorted;
+            }
+        }
+
+        function renderCards() {
+            const filtered = getFilteredEntries();
+            const sorted = getSortedEntries(filtered);
+
+            if (sorted.length === 0) {
+                cardGrid.classList.add('empty-state');
+                const tabNames = {
+                    'all': 'your library',
+                    'watching': 'currently watching',
+                    'planning': 'your plan-to-watch list',
+                    'watched': 'your watched list'
                 };
-                if (state.editingEntryId) {
-                    const idx = state.entries.findIndex(e => e.id === state.editingEntryId);
-                    if (idx !== -1) state.entries[idx] = entry;
-                } else {
-                    state.entries.unshift(entry);
-                }
-                saveData();
-                updateUI();
-                renderCards();
-                closeModal();
-                showToast('✅ Saved!', 'success');
-                if (entry.status === 'watched' && entry.rating >= 4) spawnConfetti(80);
+                cardGrid.innerHTML = `
+                    <div class="empty-state-content">
+                        <span class="empty-state-icon">📭</span>
+                        <p class="empty-state-text">No entries in ${tabNames[APP_STATE.currentTab] || 'this list'} yet</p>
+                        <p style="color:var(--text-tertiary);font-size:0.85rem;margin-top:6px;">Click "Add New" or press Ctrl+N to get started!</p>
+                    </div>
+                `;
+            } else {
+                cardGrid.classList.remove('empty-state');
+                cardGrid.innerHTML = sorted.map((entry, index) => createCardHTML(entry, index)).join('');
             }
 
-            function deleteEntry() {
-                if (!state.editingEntryId) return;
-                if (!confirm('Delete this entry?')) return;
-                state.entries = state.entries.filter(e => e.id !== state.editingEntryId);
-                saveData();
-                updateUI();
-                renderCards();
-                closeModal();
-                showToast('Deleted', 'info');
+            // Animate cards on render
+            const cards = cardGrid.querySelectorAll('.show-card');
+            cards.forEach((card, i) => {
+                card.style.animationDelay = (i * 0.04) + 's';
+                card.style.animation = 'none';
+                card.offsetHeight; // Trigger reflow
+                card.style.animation = `cardAppear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards`;
+                card.style.animationDelay = (i * 0.04) + 's';
+            });
+
+            // Add 3D tilt effect
+            cards.forEach(card => {
+                card.addEventListener('mousemove', handleCardTilt);
+                card.addEventListener('mouseleave', resetCardTilt);
+            });
+        }
+
+        function createCardHTML(entry, index) {
+            const statusClass = `status-${entry.status}`;
+            const statusLabels = {
+                'watching': '👀 Watching',
+                'planning': '📋 Planned',
+                'watched': '✅ Watched'
+            };
+            const typeBadge = entry.type === 'movie' ?
+                '<span class="card-type-badge badge-movie">🎥 Movie</span>' :
+                '<span class="card-type-badge badge-show">📺 Show</span>';
+
+            const starsHTML = Array.from({ length: 5 }, (_, i) => {
+                const filled = i < (entry.rating || 0);
+                return `<span class="star ${filled ? '' : 'empty'}">★</span>`;
+            }).join('');
+
+            const startDateStr = entry.startDate ? formatDate(entry.startDate) : '—';
+            const finishedDateStr = entry.finishedDate ? formatDate(entry.finishedDate) : '—';
+            const remarksStr = entry.remarks || 'No remarks added';
+
+            return `
+                <div class="show-card" onclick="openEditModal('${entry.id}')" data-entry-id="${entry.id}">
+                    <div class="card-glow"></div>
+                    <div class="card-header">
+                        <h3 class="card-title">${escapeHTML(entry.title)}</h3>
+                        ${typeBadge}
+                    </div>
+                    <div class="card-status ${statusClass}">
+                        <span class="status-dot"></span> ${statusLabels[entry.status]}
+                    </div>
+                    <div class="card-dates">
+                        <span>📅 Start: ${startDateStr}</span>
+                        <span>🏁 Finish: ${finishedDateStr}</span>
+                    </div>
+                    <div class="card-rating">${starsHTML} <span style="font-size:0.8rem;color:var(--text-secondary);margin-left:6px;">${entry.rating || 0}/5</span></div>
+                    <div class="card-remarks">💬 "${escapeHTML(remarksStr)}"</div>
+                    <div class="card-actions" onclick="event.stopPropagation()">
+                        <button class="btn btn-sm btn-outline" onclick="openEditModal('${entry.id}')">
+                            <i class="fa-solid fa-pen"></i> Edit
+                        </button>
+                        <button class="btn btn-sm btn-outline" style="color:#ff4757;border-color:#ff475730;" onclick="quickDelete('${entry.id}')">
+                            <i class="fa-solid fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function handleCardTilt(e) {
+            const card = e.currentTarget;
+            const rect = card.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const centerX = rect.width / 2;
+            const centerY = rect.height / 2;
+            const rotateX = ((y - centerY) / centerY) * -8;
+            const rotateY = ((x - centerX) / centerX) * 8;
+            card.style.transform =
+                `translateY(-8px) perspective(1000px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            const glow = card.querySelector('.card-glow');
+            if (glow) {
+                glow.style.background =
+                    `radial-gradient(circle at ${(x/rect.width)*100}% ${(y/rect.height)*100}%, var(--accent-glow) 0%, transparent 60%)`;
+                glow.style.opacity = '0.6';
             }
+        }
 
-            // ========== RENDER ==========
-            function renderCards() {
-                let filtered = state.currentTab === 'all' ? [...state.entries] : state.entries.filter(e => e.status === state.currentTab);
-                // Sort
-                const sort = state.currentSort;
-                if (sort === 'newest') filtered.sort((a,b) => new Date(b.createdAt) - new Date(a.createdAt));
-                else if (sort === 'oldest') filtered.sort((a,b) => new Date(a.createdAt) - new Date(b.createdAt));
-                else if (sort === 'rating-high') filtered.sort((a,b) => (b.rating||0) - (a.rating||0));
-                else if (sort === 'title-asc') filtered.sort((a,b) => a.title.localeCompare(b.title));
-
-                if (filtered.length === 0) {
-                    cardGrid.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-tertiary);">📭 No entries yet</div>`;
-                } else {
-                    cardGrid.innerHTML = filtered.map(e => `
-                        <div class="show-card" onclick="openEditModal('${e.id}')">
-                            <div style="display:flex; justify-content:space-between;"><strong>${e.title}</strong><span>${e.type==='movie'?'🎥':'📺'}</span></div>
-                            <div style="margin:8px 0;">${e.status} | ⭐ ${e.rating||0}/5</div>
-                            <div style="font-size:0.8rem;">📅 ${e.startDate||'?'} → ${e.finishedDate||'?'}</div>
-                            <div style="margin-top:6px; font-style:italic;">${e.remarks||'No remarks'}</div>
-                        </div>`).join('');
-                }
+        function resetCardTilt(e) {
+            const card = e.currentTarget;
+            card.style.transform = 'translateY(0px) perspective(1000px) rotateX(0deg) rotateY(0deg)';
+            const glow = card.querySelector('.card-glow');
+            if (glow) {
+                glow.style.opacity = '0';
+                glow.style.background =
+                    'radial-gradient(circle at center, var(--accent-glow) 0%, transparent 60%)';
             }
+        }
 
-            function updateUI() {
-                const w = state.entries.filter(e => e.status === 'watching').length;
-                const p = state.entries.filter(e => e.status === 'planning').length;
-                const d = state.entries.filter(e => e.status === 'watched').length;
-                $('#statWatching').textContent = w;
-                $('#statPlanning').textContent = p;
-                $('#statWatched').textContent = d;
-                const rated = state.entries.filter(e => e.rating > 0);
-                const avg = rated.length ? (rated.reduce((s,e) => s+e.rating,0)/rated.length).toFixed(1) : '0.0';
-                $('#statAvgRating').textContent = avg;
-                $('#badgeAll').textContent = state.entries.length;
-                $('#badgeWatching').textContent = w;
-                $('#badgePlanning').textContent = p;
-                $('#badgeWatched').textContent = d;
-                sectionTitle.textContent = state.currentTab === 'all' ? 'All Entries' : state.currentTab.charAt(0).toUpperCase() + state.currentTab.slice(1);
+        function quickDelete(entryId) {
+            if (!confirm('Delete this entry?')) return;
+            APP_STATE.entries = APP_STATE.entries.filter(e => e.id !== entryId);
+            saveData();
+            updateAllUI();
+            renderCards();
+            showToast('🗑️ Entry removed', 'info');
+        }
+
+        function updateAllUI() {
+            // Update stats
+            const watching = APP_STATE.entries.filter(e => e.status === 'watching').length;
+            const planning = APP_STATE.entries.filter(e => e.status === 'planning').length;
+            const watched = APP_STATE.entries.filter(e => e.status === 'watched').length;
+            const total = APP_STATE.entries.length;
+            const ratedEntries = APP_STATE.entries.filter(e => e.rating > 0);
+            const avgRating = ratedEntries.length > 0 ?
+                (ratedEntries.reduce((sum, e) => sum + e.rating, 0) / ratedEntries.length).toFixed(1) :
+                '0.0';
+
+            $('#statWatching').textContent = watching;
+            $('#statPlanning').textContent = planning;
+            $('#statWatched').textContent = watched;
+            $('#statAvgRating').textContent = avgRating;
+
+            // Update badges
+            $('#badgeAll').textContent = total;
+            $('#badgeWatching').textContent = watching;
+            $('#badgePlanning').textContent = planning;
+            $('#badgeWatched').textContent = watched;
+
+            // Update section title
+            const tabNames = {
+                'all': 'All Entries',
+                'watching': 'Currently Watching',
+                'planning': 'Planning to Watch',
+                'watched': 'Completed'
+            };
+            sectionTitle.textContent = tabNames[APP_STATE.currentTab] || 'All Entries';
+
+            // Animate stat numbers
+            animateStatNumbers();
+        }
+
+        function animateStatNumbers() {
+            const statCards = $$('.stat-card .stat-number');
+            statCards.forEach(el => {
+                el.style.transform = 'scale(1.15)';
+                el.style.transition = 'transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+                setTimeout(() => { el.style.transform = 'scale(1)'; }, 300);
+            });
+        }
+
+        function switchTab(tab) {
+            APP_STATE.currentTab = tab;
+            // Update active tab button
+            $$('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            updateAllUI();
+            renderCards();
+            // Scroll to cards
+            cardGrid.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ==================== DATA PERSISTENCE ====================
+        function saveData() {
+            // Always save to localStorage
+            saveToLocalStorage();
+            // If signed in with Google, also save to Drive
+            if (APP_STATE.isGoogleSignedIn && APP_STATE.googleAccessToken) {
+                saveToGoogleDrive();
             }
+        }
 
-            function switchTab(tab) {
-                state.currentTab = tab;
-                document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
-                updateUI();
-                renderCards();
+        function saveToLocalStorage() {
+            try {
+                const data = {
+                    entries: APP_STATE.entries,
+                    lastSaved: new Date().toISOString(),
+                    version: '1.0',
+                };
+                localStorage.setItem('cinevault-data', JSON.stringify(data));
+            } catch (e) {
+                console.error('Failed to save to localStorage:', e);
+                showToast('⚠️ Failed to save locally. Storage may be full.', 'error');
             }
+        }
 
-            // ========== DATA PERSISTENCE ==========
-            function saveData() {
-                localStorage.setItem('cinevault-data', JSON.stringify({ entries: state.entries }));
-                if (state.isGoogleSignedIn && state.googleAccessToken) saveToDrive();
-            }
-
-            function loadFromLocal() {
+        function loadFromLocalStorage() {
+            try {
                 const raw = localStorage.getItem('cinevault-data');
-                if (raw) state.entries = JSON.parse(raw).entries || [];
-            }
-
-            // ========== GOOGLE AUTH ==========
-            function handleGoogleSignIn() {
-                if (state.isGoogleSignedIn) {
-                    signOutGoogle();
-                    return;
-                }
-                if (!GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID')) {
-                    const client = google.accounts.oauth2.initTokenClient({
-                        client_id: GOOGLE_CLIENT_ID,
-                        scope: 'https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/userinfo.profile',
-                        callback: (response) => {
-                            if (response.access_token) {
-                                state.googleAccessToken = response.access_token;
-                                state.isGoogleSignedIn = true;
-                                localStorage.setItem('cinevault-google-token', response.access_token);
-                                fetchUserInfo(response.access_token);
-                                showToast('✅ Signed in with Google!', 'success');
-                                loadFromDrive();
-                            }
-                        },
-                    });
-                    client.requestAccessToken();
-                } else {
-                    showToast('⚠️ Set your Google Client ID in the code.', 'error');
-                }
-            }
-
-            function fetchUserInfo(token) {
-                fetch('https://www.googleapis.com/oauth2/v3/userinfo', { headers: { Authorization: `Bearer ${token}` } })
-                    .then(r => r.json()).then(user => {
-                        state.googleUser = user;
-                        localStorage.setItem('cinevault-google-user', JSON.stringify(user));
-                        updateGoogleUI();
-                    });
-            }
-
-            function signOutGoogle() {
-                state.isGoogleSignedIn = false;
-                state.googleAccessToken = null;
-                state.googleUser = null;
-                state.googleFileId = null;
-                localStorage.removeItem('cinevault-google-token');
-                localStorage.removeItem('cinevault-google-user');
-                localStorage.removeItem('cinevault-google-file-id');
-                updateGoogleUI();
-                showToast('👋 Signed out', 'info');
-            }
-
-            function updateGoogleUI() {
-                if (state.isGoogleSignedIn && state.googleUser) {
-                    googleSignBtn.innerHTML = `<img src="${state.googleUser.picture}" style="width:24px;height:24px;border-radius:50%;"> ${state.googleUser.given_name || 'User'}`;
-                    googleSignBtn.classList.add('signed-in');
-                } else {
-                    googleSignBtn.innerHTML = '<i class="fa-brands fa-google"></i> <span>Sign In</span>';
-                    googleSignBtn.classList.remove('signed-in');
-                }
-            }
-
-            function saveToDrive() {
-                if (!state.googleAccessToken) return;
-                const content = JSON.stringify({ entries: state.entries });
-                const file = new Blob([content], { type: 'application/json' });
-                const metadata = { name: DRIVE_FILE_NAME, mimeType: 'application/json', parents: ['appDataFolder'] };
-                const form = new FormData();
-                form.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-                form.append('file', file);
-
-                const url = state.googleFileId ?
-                    `https://www.googleapis.com/upload/drive/v3/files/${state.googleFileId}?uploadType=multipart` :
-                    'https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart';
-                fetch(url, {
-                    method: state.googleFileId ? 'PATCH' : 'POST',
-                    headers: { Authorization: `Bearer ${state.googleAccessToken}` },
-                    body: form,
-                }).then(r => r.json()).then(data => {
-                    if (data.id && !state.googleFileId) {
-                        state.googleFileId = data.id;
-                        localStorage.setItem('cinevault-google-file-id', data.id);
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    if (data.entries && Array.isArray(data.entries)) {
+                        APP_STATE.entries = data.entries;
+                        console.log('📂 Loaded', APP_STATE.entries.length, 'entries from localStorage');
                     }
-                }).catch(console.error);
+                }
+            } catch (e) {
+                console.error('Failed to load from localStorage:', e);
+                APP_STATE.entries = [];
             }
+        }
 
-            function loadFromDrive() {
-                if (!state.googleAccessToken) return;
-                fetch(`https://www.googleapis.com/drive/v3/files?q=name='${DRIVE_FILE_NAME}'&spaces=appDataFolder&fields=files(id)`, {
-                    headers: { Authorization: `Bearer ${state.googleAccessToken}` }
-                }).then(r => r.json()).then(data => {
-                    if (data.files?.length) {
-                        const fileId = data.files[0].id;
-                        state.googleFileId = fileId;
-                        localStorage.setItem('cinevault-google-file-id', fileId);
-                        return fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
-                            headers: { Authorization: `Bearer ${state.googleAccessToken}` }
-                        });
-                    }
-                }).then(r => r?.json()).then(cloud => {
-                    if (cloud?.entries) {
-                        state.entries = cloud.entries;
-                        saveToLocal();
-                        updateUI();
-                        renderCards();
-                        showToast('📥 Synced from Google Drive', 'success');
-                    }
-                }).catch(console.error);
-            }
+        function exportData() {
+            const data = {
+                entries: APP_STATE.entries,
+                exportedAt: new Date().toISOString(),
+                version: '1.0',
+                app: 'CineVault',
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cinevault-backup-${new Date().toISOString().slice(0,10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            showToast('💾 Data exported as JSON file!', 'success');
+        }
 
-            function exportData() {
-                const blob = new Blob([JSON.stringify({ entries: state.entries }, null, 2)], { type: 'application/json' });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `cinevault-${new Date().toISOString().slice(0,10)}.json`;
-                a.click();
-                showToast('💾 Exported!', 'success');
-                spawnConfetti(30);
-            }
-
-            function importData(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-                const reader = new FileReader();
-                reader.onload = (ev) => {
-                    try {
-                        const data = JSON.parse(ev.target.result);
-                        if (data.entries) {
-                            state.entries = [...data.entries, ...state.entries];
+        function importData(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (data.entries && Array.isArray(data.entries)) {
+                        if (confirm(
+                                `Import ${data.entries.length} entries? This will merge with existing data.`)) {
+                            // Merge: Add imported entries that don't conflict
+                            const existingIds = new Set(APP_STATE.entries.map(e => e.id));
+                            const newEntries = data.entries.filter(e => !existingIds.has(e.id));
+                            APP_STATE.entries = [...newEntries, ...APP_STATE.entries];
                             saveData();
-                            updateUI();
+                            updateAllUI();
                             renderCards();
-                            showToast('📥 Imported!', 'success');
-                            spawnConfetti(70);
+                            showToast(`✅ Imported ${newEntries.length} new entries!`, 'success');
+                            if (newEntries.length > 0) spawnConfetti(50);
                         }
-                    } catch (ex) { showToast('Invalid file', 'error'); }
-                };
-                reader.readAsText(file);
-                e.target.value = '';
+                    } else {
+                        showToast('❌ Invalid file format', 'error');
+                    }
+                } catch (err) {
+                    showToast('❌ Failed to parse JSON file', 'error');
+                    console.error(err);
+                }
+            };
+            reader.readAsText(file);
+            // Reset file input
+            event.target.value = '';
+        }
+
+        // ==================== GOOGLE AUTH & DRIVE ====================
+        // Google Identity Services configuration
+        // Users need to replace this with their own Google Client ID
+        // Get one at: https://console.cloud.google.com/apis/credentials
+        const GOOGLE_CLIENT_ID = 'YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com';
+        // Scopes needed for Drive app data folder
+        const GOOGLE_SCOPES = [
+            'https://www.googleapis.com/auth/drive.appdata',
+            'https://www.googleapis.com/auth/userinfo.profile',
+            'https://www.googleapis.com/auth/userinfo.email',
+        ];
+
+        function checkGoogleAuthState() {
+            // Check if we have a stored token
+            const storedToken = localStorage.getItem('cinevault-google-token');
+            const storedUser = localStorage.getItem('cinevault-google-user');
+            const storedFileId = localStorage.getItem('cinevault-google-file-id');
+
+            if (storedToken && storedUser) {
+                try {
+                    APP_STATE.googleAccessToken = storedToken;
+                    APP_STATE.googleUser = JSON.parse(storedUser);
+                    APP_STATE.googleFileId = storedFileId || null;
+                    APP_STATE.isGoogleSignedIn = true;
+                    updateGoogleUI();
+                    // Try to load from Drive
+                    loadFromGoogleDrive();
+                } catch (e) {
+                    console.error('Failed to restore Google session:', e);
+                    clearGoogleAuth();
+                }
+            }
+        }
+
+        function handleGoogleSignIn() {
+            if (APP_STATE.isGoogleSignedIn) {
+                // Sign out
+                if (confirm('Sign out from Google? Your local data will be preserved.')) {
+                    clearGoogleAuth();
+                    showToast('👋 Signed out from Google', 'info');
+                }
+                return;
             }
 
-            // ========== INIT ==========
-            function init() {
-                const savedTheme = localStorage.getItem('cinevault-theme') || 'dark';
-                state.theme = savedTheme;
-                document.documentElement.setAttribute('data-theme', savedTheme);
-                loadFromLocal();
-                const token = localStorage.getItem('cinevault-google-token');
-                if (token && GOOGLE_CLIENT_ID && !GOOGLE_CLIENT_ID.includes('YOUR_GOOGLE_CLIENT_ID')) {
-                    state.googleAccessToken = token;
-                    state.isGoogleSignedIn = true;
-                    fetchUserInfo(token);
-                    loadFromDrive();
-                }
-                createParticles();
-                setupStarRating();
-                updateUI();
-                renderCards();
-                document.getElementById('sortSelect').addEventListener('change', (e) => { state.currentSort = e.target.value; renderCards(); });
-                window.addEventListener('scroll', () => {
-                    document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+            // Initiate Google OAuth flow
+            initiateGoogleOAuth();
+        }
+
+        function initiateGoogleOAuth() {
+            // For a fully functional implementation, you would use Google Identity Services
+            // Since we need a real client ID, we'll use the OAuth 2.0 implicit flow
+            // or the newer GIS library.
+
+            // Check if Google Identity Services is available
+            if (typeof google !== 'undefined' && google.accounts) {
+                // Use Google Identity Services
+                const tokenClient = google.accounts.oauth2.initTokenClient({
+                    client_id: GOOGLE_CLIENT_ID,
+                    scope: GOOGLE_SCOPES.join(' '),
+                    callback: handleGoogleTokenResponse,
+                    error_callback: (err) => {
+                        console.error('Google auth error:', err);
+                        showToast('❌ Google sign-in failed. Using local storage.', 'error');
+                    },
                 });
-                document.addEventListener('keydown', (e) => {
-                    if (e.key === 'Escape') closeModal();
-                    if (e.ctrlKey && e.key === 'n') { e.preventDefault(); openAddModal(); }
+                tokenClient.requestAccessToken();
+            } else {
+                // Fallback: Load GIS library dynamically
+                showToast('🔄 Loading Google Sign-In...', 'info');
+                loadGoogleIdentityServices(() => {
+                    initiateGoogleOAuth();
                 });
             }
-            document.addEventListener('DOMContentLoaded', init);
-        })();
+        }
+
+        function loadGoogleIdentityServices(callback) {
+            if (typeof google !== 'undefined' && google.accounts) {
+                callback();
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://accounts.google.com/gsi/client';
+            script.async = true;
+            script.defer = true;
+            script.onload = () => {
+                console.log('Google Identity Services loaded');
+                setTimeout(callback, 300);
+            };
+            script.onerror = () => {
+                console.warn('Could not load Google Identity Services. Using localStorage only.');
+                showToast('⚠️ Google Sign-In unavailable. Using local storage.', 'error');
+            };
+            document.head.appendChild(script);
+        }
+
+        function handleGoogleTokenResponse(response) {
+            if (response && response.access_token) {
+                APP_STATE.googleAccessToken = response.access_token;
+                APP_STATE.isGoogleSignedIn = true;
+                localStorage.setItem('cinevault-google-token', response.access_token);
+
+                // Fetch user info
+                fetchUserInfo(response.access_token);
+                showToast('✅ Signed in with Google!', 'success');
+                updateGoogleUI();
+
+                // Try to load data from Drive
+                loadFromGoogleDrive();
+            } else {
+                showToast('❌ Failed to get Google access token', 'error');
+            }
+        }
+
+        function fetchUserInfo(accessToken) {
+            fetch('https://www.googleapis.com/oauth2/v3/userinfo', {
+                    headers: { 'Authorization': `Bearer ${accessToken}` },
+                })
+                .then(res => res.json())
+                .then(user => {
+                    APP_STATE.googleUser = user;
+                    localStorage.setItem('cinevault-google-user', JSON.stringify(user));
+                    updateGoogleUI();
+                })
+                .catch(err => {
+                    console.error('Failed to fetch user info:', err);
+                });
+        }
+
+        function updateGoogleUI() {
+            if (APP_STATE.isGoogleSignedIn && APP_STATE.googleUser) {
+                const user = APP_STATE.googleUser;
+                const avatarHTML = user.picture ?
+                    `<img src="${user.picture}" alt="avatar" class="user-avatar">` :
+                    '<i class="fa-brands fa-google"></i>';
+                googleSignBtn.innerHTML = `${avatarHTML} <span>${user.given_name || user.name || 'User'}</span>`;
+                googleSignBtn.classList.add('signed-in');
+                googleSignBtn.title = 'Click to sign out';
+            } else {
+                googleSignBtn.innerHTML = '<i class="fa-brands fa-google"></i> <span>Sign In</span>';
+                googleSignBtn.classList.remove('signed-in');
+                googleSignBtn.title = 'Sign in with Google';
+            }
+        }
+
+        function clearGoogleAuth() {
+            APP_STATE.isGoogleSignedIn = false;
+            APP_STATE.googleUser = null;
+            APP_STATE.googleAccessToken = null;
+            APP_STATE.googleFileId = null;
+            localStorage.removeItem('cinevault-google-token');
+            localStorage.removeItem('cinevault-google-user');
+            localStorage.removeItem('cinevault-google-file-id');
+            updateGoogleUI();
+        }
+
+        function saveToGoogleDrive() {
+            if (!APP_STATE.googleAccessToken) return;
+
+            const data = {
+                entries: APP_STATE.entries,
+                lastSynced: new Date().toISOString(),
+                version: '1.0',
+                app: 'CineVault',
+            };
+            const jsonContent = JSON.stringify(data, null, 2);
+            const fileBlob = new Blob([jsonContent], { type: DRIVE_JSON_MIME });
+
+            const metadata = {
+                name: DRIVE_FILE_NAME,
+                mimeType: DRIVE_JSON_MIME,
+                parents: ['appDataFolder'],
+            };
+
+            if (APP_STATE.googleFileId) {
+                // Update existing file
+                const formData = new FormData();
+                formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                formData.append('file', fileBlob);
+
+                fetch(`https://www.googleapis.com/upload/drive/v3/files/${APP_STATE.googleFileId}?uploadType=multipart`, {
+                        method: 'PATCH',
+                        headers: { 'Authorization': `Bearer ${APP_STATE.googleAccessToken}` },
+                        body: formData,
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        console.log('📤 Synced to Google Drive:', data.id);
+                    })
+                    .catch(err => {
+                        console.error('Failed to sync to Google Drive:', err);
+                        // Token may have expired
+                        if (err.message.includes('401')) {
+                            clearGoogleAuth();
+                            showToast('⚠️ Google session expired. Re-sign in to sync.', 'error');
+                        }
+                    });
+            } else {
+                // Create new file
+                const formData = new FormData();
+                formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+                formData.append('file', fileBlob);
+
+                fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+                        method: 'POST',
+                        headers: { 'Authorization': `Bearer ${APP_STATE.googleAccessToken}` },
+                        body: formData,
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.id) {
+                            APP_STATE.googleFileId = data.id;
+                            localStorage.setItem('cinevault-google-file-id', data.id);
+                            console.log('📤 Created & synced to Google Drive:', data.id);
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Failed to create file on Google Drive:', err);
+                        if (err.message.includes('401')) {
+                            clearGoogleAuth();
+                            showToast('⚠️ Google session expired. Re-sign in to sync.', 'error');
+                        }
+                    });
+            }
+        }
+
+        function loadFromGoogleDrive() {
+            if (!APP_STATE.googleAccessToken) return;
+
+            // Search for existing app data file
+            fetch(
+                    `https://www.googleapis.com/drive/v3/files?q=name='${encodeURIComponent(DRIVE_FILE_NAME)}'&spaces=appDataFolder&fields=files(id,name,modifiedTime)`,
+                    {
+                        headers: { 'Authorization': `Bearer ${APP_STATE.googleAccessToken}` },
+                    }
+                )
+                .then(res => res.json())
+                .then(data => {
+                    if (data.files && data.files.length > 0) {
+                        const file = data.files[0];
+                        APP_STATE.googleFileId = file.id;
+                        localStorage.setItem('cinevault-google-file-id', file.id);
+
+                        // Download file content
+                        return fetch(
+                            `https://www.googleapis.com/drive/v3/files/${file.id}?alt=media`, {
+                                headers: { 'Authorization': `Bearer ${APP_STATE.googleAccessToken}` },
+                            }
+                        );
+                    } else {
+                        console.log('📭 No existing file on Google Drive. Will create on next save.');
+                        // Save current local data to Drive
+                        saveToGoogleDrive();
+                        return null;
+                    }
+                })
+                .then(res => {
+                    if (!res) return null;
+                    if (!res.ok) throw new Error('Failed to download file');
+                    return res.json();
+                })
+                .then(cloudData => {
+                    if (cloudData && cloudData.entries) {
+                        // Merge strategy: Use the most recent data
+                        const localLastSaved = getLocalLastSaved();
+                        const cloudLastSynced = cloudData.lastSynced || '1970-01-01';
+
+                        if (new Date(cloudLastSynced) > new Date(localLastSaved)) {
+                            // Cloud data is newer
+                            if (confirm(
+                                    `📥 Newer data found on Google Drive (${cloudData.entries.length} entries). Load it?`
+                                    )) {
+                                APP_STATE.entries = cloudData.entries;
+                                saveToLocalStorage();
+                                updateAllUI();
+                                renderCards();
+                                showToast('✅ Loaded data from Google Drive!', 'success');
+                            }
+                        } else if (APP_STATE.entries.length > (cloudData.entries?.length || 0)) {
+                            // Local has more entries, push to cloud
+                            saveToGoogleDrive();
+                        }
+                        console.log('📂 Cloud entries:', cloudData.entries.length,
+                            '| Local entries:', APP_STATE.entries.length);
+                    }
+                })
+                .catch(err => {
+                    console.error('Failed to load from Google Drive:', err);
+                    if (err.message.includes('401')) {
+                        clearGoogleAuth();
+                        showToast('⚠️ Google session expired. Using local data.', 'error');
+                    }
+                });
+        }
+
+        function getLocalLastSaved() {
+            try {
+                const raw = localStorage.getItem('cinevault-data');
+                if (raw) {
+                    const data = JSON.parse(raw);
+                    return data.lastSaved || '1970-01-01';
+                }
+            } catch (e) {}
+            return '1970-01-01';
+        }
+
+        // ==================== UTILITIES ====================
+        function escapeHTML(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateStr) {
+            if (!dateStr) return '—';
+            const date = new Date(dateStr + 'T00:00:00');
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+            });
+        }
+
+        // ==================== SERVICE WORKER REGISTRATION FOR OFFLINE ====================
+        if ('serviceWorker' in navigator) {
+            // Could register a service worker for full offline support
+            // For now, localStorage handles offline data persistence
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', init);
+
+        // ==================== AUTO-SAVE ON PAGE UNLOAD ====================
+        window.addEventListener('beforeunload', () => {
+            saveToLocalStorage();
+        });
+
+        // ==================== PERIODIC AUTO-SAVE ====================
+        setInterval(() => {
+            if (APP_STATE.entries.length > 0) {
+                saveToLocalStorage();
+            }
+        }, 30000); // Every 30 seconds
+
+        console.log('🎬✨ CineVault ready! All systems initialized.');
+        console.log('📋 Features: Watchlist | Google Drive Sync | Light/Dark Mode | Animations | Export/Import');
+        console.log('⌨️ Shortcuts: Ctrl+N = New Entry | Esc = Close Modal');
+        console.log('💡 Set your Google Client ID in the GOOGLE_CLIENT_ID variable for cloud sync.');
     </script>
 </body>
 </html>
